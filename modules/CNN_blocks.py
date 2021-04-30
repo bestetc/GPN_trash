@@ -29,10 +29,10 @@ class ResNet_A_Block(nn.Module):
     num_layer: int
         block serial number. Used for channels calc.
         standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, default=0
+    downsample: int, optional
         set type of downsampling in ResNet Block
         should be -1, 0 or 1
-    activation: str, default='relu'
+    activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
     
@@ -43,10 +43,14 @@ class ResNet_A_Block(nn.Module):
         
     See Also
     --------
+    ResNet_B_Block
+    ResNet_D_Block
     ResNet_A_Bottleneck_Block
-    ResNet_D_Normal_Block
+    ResNet_B_Bottleneck_Block
     ResNet_D_Bottleneck_Block
-    
+
+    [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks. Part 4.1.
+    https://arxiv.org/pdf/1812.01187.pdf
     """
     
     def __init__(self,
@@ -129,19 +133,23 @@ class ResNet_A_Bottleneck_Block(nn.Module):
     num_layer: int
         block serial number. Used for channels calc.
         standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, default=0
+    downsample: int, optional
         set type of downsampling in ResNet Block
         should be -1, 0 or 1
-    activation: str, default='relu'
+    activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
 
     See Also
     --------
-    ResNet_Normal_Block
-    ResNet_D_Normal_Block
+    ResNet_A_Block
+    ResNet_B_Block
+    ResNet_D_Block
+    ResNet_B_Bottleneck_Block
     ResNet_D_Bottleneck_Block
-
+    
+    [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks. Part 4.1.
+    https://arxiv.org/pdf/1812.01187.pdf
     """
     def __init__(self,
                  num_layer,
@@ -230,21 +238,24 @@ class ResNet_B_Block(nn.Module):
     num_layer: int
         block serial number. Used for channels calc.
         standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, default=0
+    downsample: int, optional
         set type of downsampling in ResNet Block
         should be -1, 0 or 1
-    activation: str, default='relu'
+    activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
         
     See Also
     --------
-    ResNet_Normal_Block
-    ResNet_Bottleneck_Block
+    ResNet_A_Block
+    ResNet_D_Block
+    ResNet_A_Bottleneck_Block
+    ResNet_B_Bottleneck_Block
     ResNet_D_Bottleneck_Block
         
-    [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks.
-    Part 4.1
+    [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks. Part 4.2.
+    https://arxiv.org/pdf/1812.01187.pdf
+    
     
     """
     
@@ -321,21 +332,23 @@ class ResNet_B_Bottleneck_Block(nn.Module):
     num_layer: int
         block serial number. Used for channels calc.
         standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, default=0
+    downsample: int, optional
         set type of downsampling in ResNet Block
         should be -1, 0 or 1
-    activation: str, default='relu'
+    activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
 
     See Also
     --------
-    ResNet_Normal_Block
-    ResNet_D_Normal_Block
+    ResNet_A_Block
+    ResNet_B_Block
+    ResNet_D_Block
+    ResNet_A_Bottleneck_Block
     ResNet_D_Bottleneck_Block
 
-    [1] Bag of Tricks for Image Classification with Convolutional Neural Networks.
-    Part 4.2
+    [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks. Part 4.2.
+    https://arxiv.org/pdf/1812.01187.pdf
 
     """
     
@@ -429,17 +442,19 @@ class ResNet_D_Block(nn.Module):
     num_layer: int
         block serial number. Used for channels calc.
         standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, default=0
+    downsample: int, optional
         set type of downsampling in ResNet Block
         should be -1, 0 or 1
-    activation: str, default='relu'
+    activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
         
     See Also
     --------
-    ResNet_Normal_Block
-    ResNet_Bottleneck_Block
+    ResNet_A_Block
+    ResNet_B_Block
+    ResNet_A_Bottleneck_Block
+    ResNet_B_Bottleneck_Block
     ResNet_D_Bottleneck_Block
         
     [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks.
@@ -521,22 +536,24 @@ class ResNet_D_Bottleneck_Block(nn.Module):
     num_layer: int
         block serial number. Used for channels calc.
         standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, default=0
+    downsample: int, optional
         set type of downsampling in ResNet Block
         should be -1, 0 or 1
-    activation: str, default='relu'
+    activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
 
     See Also
     --------
-    ResNet_Normal_Block
-    ResNet_D_Normal_Block
-    ResNet_D_Bottleneck_Block
+    ResNet_A_Block
+    ResNet_B_Block
+    ResNet_D_Block
+    ResNet_A_Bottleneck_Block
+    ResNet_B_Bottleneck_Block
 
-    [1] Bag of Tricks for Image Classification with Convolutional Neural Networks.
-    Part 4.2
-
+    [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks. Part 4.2.
+    https://arxiv.org/pdf/1812.01187.pdf
+    
     """
     
     def __init__(self,
@@ -613,5 +630,3 @@ class ResNet_D_Bottleneck_Block(nn.Module):
         out = self.activation(out)
             
         return out
-
-    
