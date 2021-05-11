@@ -57,7 +57,7 @@ class ResNetLike(nn.Module):
                  activation='relu'
                  ):
         
-        super(ResNetLike, self).__init__()
+        super().__init__()
         
         if resnet_type in ['C', 'D']:
             self.first = nn.Sequential(
@@ -75,18 +75,6 @@ class ResNetLike(nn.Module):
         else:
             raise ValueError('Unknown resnet_type value')
         
-        self.bottleneck_block_types = {
-            'A': CNN_blocks.ResNet_A_Bottleneck_Block,
-            'B': CNN_blocks.ResNet_B_Bottleneck_Block,
-            'C': CNN_blocks.ResNet_A_Bottleneck_Block,
-            'D': CNN_blocks.ResNet_D_Bottleneck_Block
-        }
-        self.normal_block_types = {
-            'A': CNN_blocks.ResNet_A_Block,
-            'B': CNN_blocks.ResNet_B_Block,
-            'C': CNN_blocks.ResNet_A_Block,
-            'D': CNN_blocks.ResNet_D_Block
-        }
         self.body = nn.Sequential()
         if bottleneck:
             for num, layer in enumerate(layers):
@@ -98,10 +86,11 @@ class ResNetLike(nn.Module):
                     elif block != 0:  
                         downsample = 0
                     self.body.add_module(name='block_%d_%d'%(num+2,block+1), 
-                                         module=self.bottleneck_block_types[resnet_type](
+                                         module=CNN_blocks.ResNetBottleneckBlock(
                                              num+2, 
                                              downsample=downsample,
-                                             activation=activation))
+                                             activation=activation,
+                                             block_type=resnet_type))
         elif not bottleneck:
             for num, layer in enumerate(layers):
                 for block in range(layer):
@@ -112,10 +101,11 @@ class ResNetLike(nn.Module):
                     elif block != 0:  
                         downsample = 0
                     self.body.add_module(name='block_%d_%d'%(num+2,block+1), 
-                                         module=self.normal_block_types[resnet_type](
+                                         module=CNN_blocks.ResNetNormalBlock(
                                              num+2, 
                                              downsample=downsample,
-                                             activation=activation))
+                                             activation=activation,
+                                             block_type=resnet_type))
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         m = 4 if bottleneck else 1
