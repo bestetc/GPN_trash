@@ -118,15 +118,15 @@ def get_scheduler(optimizer, scheduler_type, **kwargs):
         learning_rate: float
             Initial learning rate.
         step_len: int
-            Quantity of epoch between learning rate decay at 10 times. 
+            Quantity of epochs between learning rate decay at 10 times. 
             Use with 'step' scheduler type only.
         cycle_len: int
-            Quantity of epoch till the learning rate decay from initial to zero.
+            Quantity of epochs till the learning rate decay from initial to zero.
             Use with 'step' scheduler type only.
         batch_per_epoch: int
-            Quantity batch in datasets.
+            Quantity batches in datasets.
         warmup_epoch: int
-            Quantity epoch to rise learning rate from zero to initial.
+            Quantity epochs to rise learning rate from zero to initial.
         
     Returns
     -------
@@ -166,14 +166,14 @@ def true_accuracy(dataloader, model, device):
     dataloader: torch.utils.data.DataLoader
         DataLoader which contain dataset with labels.
     model: torch.nn.Module
-        neural network model
+        Neural network model.
     deice: str
-        device where model are located
+        Device where model are located.
         
     Returns
     -------
     float
-        accuracy metric
+        Accuracy metric result.
     
     See Also
     --------
@@ -209,17 +209,17 @@ def approx_accuracy(dataset, model, device, denominator):
     dataloader: torch.utils.data.DataLoader
         DataLoader which contain dataset with labels.
     model: torch.nn.Module
-        neural network model
+        Neural network model.
     device: str
-        device where model are located
+        Device where model are located.
     denominator: int
-        define part of dataset which would be use for accuracy calc
+        Define part of dataset which would be use for accuracy calc.
         'denominator = 4' mean that would be used 1/4 of dataset.
         
     Returns
     -------
     float
-        accuracy metric
+        Accuracy metric result.
     
     See Also
     --------
@@ -247,22 +247,22 @@ def make_step(data, optimizer, model, criterion, device):
     Parameters
     ----------
     data: torch.tensor
-        batch from dataset
+        Batch from dataset.
     optimizer: torch.optim
-        optimizer picked for training
+        Optimizer picked for training.
     model: nn.Module
-        neural network model
+        Neural network model.
     criterion: torch.nn.modules.loss
-        loss function picked for training
+        Loss function picked for training.
     device: str
-        device where model are located
+        Device where model are located.
         
     Returns
     -------
     outputs: torch.tensor
-        model outputs
+        Model outputs.
     loss: torch.tensor
-        loss function result
+        Loss function result.
     
     Examples
     --------
