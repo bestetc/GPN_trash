@@ -1,3 +1,7 @@
+""" Module contain tools for data loading and helpful os operation. 
+
+"""
+
 import os
 
 import matplotlib.pyplot as plt
@@ -30,7 +34,7 @@ def create_dir(dir_path):
         print(dir_path + 'created')
 
 def label_func(label):
-    ''' Return the name of class by it's label'''
+    ''' Return the name of class by it's label. '''
     labels_dict = {
     0: 'tench',
     1: 'English springer',
