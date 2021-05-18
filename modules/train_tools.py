@@ -1,3 +1,13 @@
+""" Module contain some usefull tools for neural networks.
+    
+    Custom metrics: SmoothCrossEntropyLoss class
+    Optimizers: get_optimizer function
+    Shedulers: get_scheduler function
+    Metrics: true_accuracy and approx_accuracy functions
+    Training loop simplify: make_step function
+
+"""
+
 import torch
 from torch.nn.modules.loss import _WeightedLoss
 from torch.optim import SGD, Adam, AdamW
@@ -13,7 +23,7 @@ class SmoothCrossEntropyLoss(_WeightedLoss):
     ----------
     weight: torch.Tensor, optional 
         Manual rescaling weight given to each class.
-        If given, has to be a Tensor of size `C`
+        If given, has to be a Torch.Tensor with shape [class_qty]
     reduction: str, optional
         Specifies the reduction to apply to the output.
         'mean': the mean of the output is taken.
@@ -84,12 +94,6 @@ def get_optimizer(model, optimizer_type, learning_rate):
     -------
     torch.optim
     
-    See Also
-    --------
-    torch.optim.lr_scheduler.StepLR
-    torch.optim.lr_scheduler.CosineAnnealingWarmRestarts
-    torch.optim.lr_scheduler.CyclicLR
-    
     """
     if optimizer_type == 'SGD':
         optimizer = SGD(model.parameters(), lr=learning_rate, weight_decay=0.0001, momentum=0.9)
@@ -97,6 +101,8 @@ def get_optimizer(model, optimizer_type, learning_rate):
         optimizer = Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-06, weight_decay=0.0001, amsgrad=False)
     elif optimizer_type == 'AdamW':
         optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-06, weight_decay=0.0001, amsgrad=False)
+    else:
+        raise ValueError('Unknown optimizer_type value')
     
     return optimizer
 
@@ -114,7 +120,7 @@ def get_scheduler(optimizer, scheduler_type, **kwargs):
         'step' - decrease learning rate in 10 time step by step.
         'cos' - decrease learning rate using a cosine annealing schedule.
         'warmup' - increase learning rate from zero to initial.
-    **kwargs : dict, optional
+    **kwargs : dict,
         learning_rate: float
             Initial learning rate.
         step_len: int
@@ -147,7 +153,7 @@ def get_scheduler(optimizer, scheduler_type, **kwargs):
     elif scheduler_type == 'warmup':
         scheduler = lr_scheduler.CyclicLR(
                         optimizer, 
-                        base_lr=kwargs['learning_rate'] / kwargs['batch_per_epoch'] * kwargs['warmup_epoch'], 
+                        base_lr=kwargs['learning_rate'] / (kwargs['batch_per_epoch'] * kwargs['warmup_epoch']), 
                         max_lr=kwargs['learning_rate'],
                         step_size_up=(kwargs['batch_per_epoch'] + 1) * kwargs['warmup_epoch'],
                         step_size_down=0,
@@ -164,7 +170,7 @@ def true_accuracy(dataloader, model, device):
     Parameters
     ----------
     dataloader: torch.utils.data.DataLoader
-        DataLoader which contain dataset with labels.
+        DataLoader which contain dataset.
     model: torch.nn.Module
         Neural network model.
     deice: str
@@ -206,8 +212,8 @@ def approx_accuracy(dataset, model, device, denominator):
     
     Parameters
     ----------
-    dataloader: torch.utils.data.DataLoader
-        DataLoader which contain dataset with labels.
+    dataset: torch.utils.data.Dataset
+        dataset with data.
     model: torch.nn.Module
         Neural network model.
     device: str
