@@ -1,3 +1,12 @@
+""" Module contain blocks used in CNN.
+
+    ResNetNormalBlock: standart ResNet block.
+    ResNetBottleneckBlock: ResNetBlock with bottleneck.
+    
+    Learn more about ResNet blocks: https://arxiv.org/pdf/1512.03385.pdf
+        
+"""
+
 from torch import nn
 
 def conv1x1(in_channels, out_channels, stride=1, padding=0):
