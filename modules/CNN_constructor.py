@@ -1,3 +1,7 @@
+""" Module contain a few constructors for CNN.
+
+"""
+
 import torch
 from torch import nn
 
