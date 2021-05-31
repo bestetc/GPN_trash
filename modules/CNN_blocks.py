@@ -4,9 +4,8 @@
     ResNetBottleneckBlock: ResNetBlock with bottleneck.
     
     Learn more about ResNet blocks: https://arxiv.org/pdf/1512.03385.pdf
-        
-"""
 
+"""
 from torch import nn
 
 def conv1x1(in_channels, out_channels, stride=1, padding=0):
@@ -90,6 +89,8 @@ class ResNetNormalBlock(nn.Module):
             self.activation = nn.Sigmoid()
         elif activation == 'swish':
             self.activation = nn.SiLU()
+        else:
+            raise ValueError('activation have unacceptable value')
             
         if downsample == 1:
             if block_type == 'D':
@@ -97,6 +98,7 @@ class ResNetNormalBlock(nn.Module):
                     nn.AvgPool2d(kernel_size=2, stride=2),
                     conv1x1(self.in_channels, self.out_channels, stride=1),
                     nn.BatchNorm2d(self.out_channels))
+                self.conv1 = conv3x3(self.in_channels, self.out_channels, stride=2)
             else:
                 self.downsample = nn.Sequential(
                     conv1x1(self.in_channels, self.out_channels, stride=2),
@@ -187,7 +189,7 @@ class ResNetBottleneckBlock(nn.Module):
             raise ValueError('downsample have unacceptable value')
         self.use_downsample = downsample
 
-        if num_layer == 2 and downsample == 1:
+        if num_layer == 2 and downsample == -1:
             self.in_channels = 16 * (2**num_layer)
         elif num_layer > 2 and downsample != 0:
             self.in_channels = 16 * (2**(num_layer - 1)) * 4

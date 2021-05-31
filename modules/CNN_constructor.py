@@ -16,7 +16,7 @@ class ResNetLike(nn.Module):
     
     Parameters
     ----------
-    layers: list
+    layers: iterable with int (list, tuples etc)
         List with quantity of ResNet block separated by the layer of blocks.
     num_classes: int,
         Class quantity in dataset.
@@ -83,30 +83,40 @@ class ResNetLike(nn.Module):
         if bottleneck:
             for num, layer in enumerate(layers):
                 for block in range(layer):
-                    if block == 0  and num < len(layers) - 1:
-                        downsample = 1
-                    elif block == 0 and num == len(layers) - 1:
+                    if block == 0 and num == 0:
                         downsample = -1
-                    elif block != 0:  
+                    elif block == 0 and num > 0:
+                        downsample = 1
+                    else:
                         downsample = 0
-                    self.body.add_module(name='block_%d_%d'%(num+2,block+1), 
+#                     if block == 0  and num < len(layers) - 1:
+#                         downsample = 1
+#                     elif block == 0 and num == 0:
+#                         downsample = -1
+#                     elif block != 0:  
+#                         downsample = 0
+                    self.body.add_module(name='block_%d_%d'%(num+2, block+1), 
                                          module=CNN_blocks.ResNetBottleneckBlock(
-                                             num+2, 
+                                             num + 2, 
                                              downsample=downsample,
                                              activation=activation,
                                              block_type=resnet_type))
         elif not bottleneck:
             for num, layer in enumerate(layers):
                 for block in range(layer):
-                    if block == 0  and num < len(layers) - 1:
+                    if block == 0 and num > 0:
                         downsample = 1
-                    elif block == 0 and num == len(layers) - 1:
-                        downsample = -1
-                    elif block != 0:  
+                    else:
                         downsample = 0
-                    self.body.add_module(name='block_%d_%d'%(num+2,block+1), 
+#                     if block == 0  and num < len(layers) - 1:
+#                         downsample = 1
+#                     elif block == 0 and num == len(layers) - 1:
+#                         downsample = -1
+#                     elif block != 0:  
+#                         downsample = 0
+                    self.body.add_module(name='block_%d_%d'%(num+2, block+1), 
                                          module=CNN_blocks.ResNetNormalBlock(
-                                             num+2, 
+                                             num + 2, 
                                              downsample=downsample,
                                              activation=activation,
                                              block_type=resnet_type))
