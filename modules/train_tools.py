@@ -219,7 +219,7 @@ def approx_accuracy(dataset, model, device, denominator):
     device: str
         Device where model are located.
     denominator: int
-        Define part of dataset which would be use for accuracy calc.
+        Reducing factor for dataset which would be use for accuracy calc.
         'denominator = 4' mean that would be used 1/4 of dataset.
         
     Returns
