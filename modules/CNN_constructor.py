@@ -5,7 +5,7 @@
 import torch
 from torch import nn
 
-from modules import CNN_blocks
+from modules import CNN_blocks_rev
 
 class ResNetLike(nn.Module):
     """ Compile ResNet-like neural networks.   
@@ -17,11 +17,11 @@ class ResNetLike(nn.Module):
     Parameters
     ----------
     layers: iterable with int (list, tuples etc)
-        List with quantity of ResNet block separated by the layer of blocks.
+        List with quantity of ResNet blocks separated by the layers of blocks.
     num_classes: int,
         Class quantity in dataset.
     bottleneck: bool,
-        Set contructor to use bottleneck blocks.
+        Set constructor to use bottleneck blocks.
     resnet_type: str, optional
         Block type using in construction.
         Could be 'A', 'B', 'C' or 'D'
@@ -48,7 +48,7 @@ class ResNetLike(nn.Module):
         
         ResNetLike([2, 2, 2, 2], 10, False, resnet_type='D'):
             create ResNetD-18 for Imagenette dataset
-            
+        
         ResNetLike([3, 4, 23, 3], 10, False, resnet_type='B', activation='swish'):
             create ResNetB-101 for Imagenette dataset with swish activation function
 
@@ -61,16 +61,24 @@ class ResNetLike(nn.Module):
                  activation='relu'
                  ):
         
+        self.layers = layers
+        self.num_classes = num_classes
+        self.bottleneck = bottleneck
+        self.resnet_type = resnet_type
+        self.activation = activation
+        
         super().__init__()
         
         if resnet_type in ['C', 'D']:
             self.first = nn.Sequential(
                 nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1),
                 nn.BatchNorm2d(32),
-                nn.Conv2d(32, 32, kernel_size=3, stride=2, padding=1),
+                nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1),
                 nn.BatchNorm2d(32),
                 nn.Conv2d(32, 64, kernel_size=3, stride=1, padding=1),
-                nn.BatchNorm2d(64))
+                nn.BatchNorm2d(64),
+                nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
+                
         elif resnet_type in ['A', 'B']:
             self.first = nn.Sequential(
                 nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
@@ -80,50 +88,33 @@ class ResNetLike(nn.Module):
             raise ValueError('Unknown resnet_type value')
         
         self.body = nn.Sequential()
-        if bottleneck:
-            for num, layer in enumerate(layers):
-                for block in range(layer):
-                    if block == 0 and num == 0:
-                        downsample = -1
-                    elif block == 0 and num > 0:
-                        downsample = 1
-                    else:
-                        downsample = 0
-#                     if block == 0  and num < len(layers) - 1:
-#                         downsample = 1
-#                     elif block == 0 and num == 0:
-#                         downsample = -1
-#                     elif block != 0:  
-#                         downsample = 0
-                    self.body.add_module(name='block_%d_%d'%(num+2, block+1), 
-                                         module=CNN_blocks.ResNetBottleneckBlock(
-                                             num + 2, 
-                                             downsample=downsample,
-                                             activation=activation,
-                                             block_type=resnet_type))
-        elif not bottleneck:
-            for num, layer in enumerate(layers):
-                for block in range(layer):
-                    if block == 0 and num > 0:
-                        downsample = 1
-                    else:
-                        downsample = 0
-#                     if block == 0  and num < len(layers) - 1:
-#                         downsample = 1
-#                     elif block == 0 and num == len(layers) - 1:
-#                         downsample = -1
-#                     elif block != 0:  
-#                         downsample = 0
-                    self.body.add_module(name='block_%d_%d'%(num+2, block+1), 
-                                         module=CNN_blocks.ResNetNormalBlock(
-                                             num + 2, 
-                                             downsample=downsample,
-                                             activation=activation,
-                                             block_type=resnet_type))
+        
+        b = 4 if bottleneck else 1 # channels multiplier
+        for num, layer in enumerate(layers):
+            for block in range(layer):
+                if block == 0 and num == 0:
+                    in_channels = 64
+                    out_channels = 64 * b
+                    downsample = False
+                elif block == 0 and num > 0:
+                    in_channels = 64 * (2**(num-1)) * b
+                    out_channels = 64 * (2**num) * b
+                    downsample = True
+                else:
+                    in_channels = 64 * (2**num) * b
+                    out_channels = 64 * (2**num) * b
+                    downsample = False
+                cnn_block_type = CNN_blocks_rev.ResNetBottleneckBlock if bottleneck else CNN_blocks_rev.ResNetNormalBlock
+                self.body.add_module(name='block_%d_%d'%(num+2, block+1), # naming for corresponding with ResNet paper
+                                     module=cnn_block_type(
+                                         in_channels,
+                                         out_channels,
+                                         downsample=downsample,
+                                         activation=activation,
+                                         block_type=resnet_type))
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        m = 4 if bottleneck else 1
-        self.linear_input = 32*(2**(len(layers))) * m
+        self.linear_input = 32*(2**(len(layers))) * b
         self.linear = nn.Linear(self.linear_input, num_classes)
         
     def forward(self, x):
@@ -135,4 +126,3 @@ class ResNetLike(nn.Module):
         x = self.linear(x)
        
         return x
-    

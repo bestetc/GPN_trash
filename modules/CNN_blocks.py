@@ -27,19 +27,17 @@ class ResNetNormalBlock(nn.Module):
     
     Create ResNet block with two convolutional layers with skip connection.
     All convolutional layer have normalize with BatchNorm layer.
-    Downsampling realize with three mode: 
-        1 - downsampling decrease H and W of tensor in 2 times and increase channels in 2 times
-        -1 - downsampling dont change H and W and increase channels in 2 times
-        0 - no downsampling  
+    Activation layer could be optional.
     
     Parameters
     ----------
-    num_layer: int
-        block serial number. Used for channels calc.
-        standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, optional
-        set type of downsampling in ResNet Block
-        should be -1, 0 or 1
+    in_channels: int
+        number of channels in the input tensor.
+    out_channels: int
+        number of channels in the output tensor.
+    downsample: bool, optional
+        make block with downsampling.
+        downsampling decrease H and W of tensor in 2 times
     activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
@@ -62,8 +60,9 @@ class ResNetNormalBlock(nn.Module):
     """
     
     def __init__(self,
-                 num_layer,
-                 downsample=0,
+                 in_channels,
+                 out_channels,
+                 downsample=False,
                  activation='relu',
                  block_type='A'
                  ):
@@ -71,17 +70,13 @@ class ResNetNormalBlock(nn.Module):
         
         if block_type not in ['A', 'B', 'C', 'D']:
             raise ValueError('block_type have unacceptable value')
-        if downsample not in [-1, 0, 1]:
-            raise ValueError('Downsample have unacceptable value')
-        self.use_downsample = downsample
+        if not isinstance(downsample, bool):
+            raise TypeError('Downsample have unacceptable type')
             
-        if num_layer == 2 and downsample == 1:
-            self.in_channels = 16*(2**num_layer)
-        elif num_layer > 2 and downsample != 0:
-            self.in_channels = 16*(2**(num_layer-1))
-        elif downsample == 0: 
-            self.in_channels = 16*(2**num_layer)
-        self.out_channels = 16*(2**num_layer)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.use_downsample = downsample
+        self.block_type = block_type        
         
         if activation == 'relu':
             self.activation = nn.ReLU()
@@ -92,30 +87,21 @@ class ResNetNormalBlock(nn.Module):
         else:
             raise ValueError('activation have unacceptable value')
             
-        if downsample == 1:
-            if block_type == 'D':
-                self.downsample = nn.Sequential(
+        if self.use_downsample:
+            if self.block_type == 'D':
+                self.downsample_block = nn.Sequential(
                     nn.AvgPool2d(kernel_size=2, stride=2),
                     conv1x1(self.in_channels, self.out_channels, stride=1),
                     nn.BatchNorm2d(self.out_channels))
                 self.conv1 = conv3x3(self.in_channels, self.out_channels, stride=2)
             else:
-                self.downsample = nn.Sequential(
+                self.downsample_block = nn.Sequential(
                     conv1x1(self.in_channels, self.out_channels, stride=2),
                     nn.BatchNorm2d(self.out_channels))
                 self.conv1 = conv3x3(self.in_channels, self.out_channels, stride=2)
-            
-        elif downsample == -1:
-            self.downsample = nn.Sequential(
-                conv1x1(self.in_channels, self.out_channels, stride=1),
-                nn.BatchNorm2d(self.out_channels)
-                )
+        else:
             self.conv1 = conv3x3(self.in_channels, self.out_channels)
 
-        elif downsample == 0:
-            self.conv1 = conv3x3(self.in_channels, self.out_channels)
-
-            
         self.bn1 = nn.BatchNorm2d(self.out_channels)    
         self.conv2 = conv3x3(self.out_channels, self.out_channels)
         self.bn2 = nn.BatchNorm2d(self.out_channels)
@@ -128,33 +114,31 @@ class ResNetNormalBlock(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
 
-        if self.use_downsample != 0:
-            skip = self.downsample(x)
+        if self.use_downsample:
+            skip = self.downsample_block(x)
 
         out += skip
         out = self.activation(out)
 
         return out
 
-    
+
 class ResNetBottleneckBlock(nn.Module):
     """ Create Bottleneck ResNet Block 
     
     Create ResNet block with three convolutional layers with skip connection.
     All convolutional layer have normalize with BatchNorm layer.
-    Downsampling realize with three mode: 
-        1: downsampling decrease H and W of tensor in 2 times and increase channels in 2 times
-        -1: downsampling dont change H and W and increase channels in 2 times
-        0: no downsampling  
+    Activation layer could be optional.
     
     Parameters
     ----------
-    num_layer: int
-        block serial number. Used for channels calc.
-        standart ResNet start to use ResNet block with second block (num_layer=2)
-    downsample: int, optional
-        set type of downsampling in ResNet Block
-        should be -1, 0 or 1
+    in_channels: int
+        number of channels in the input tensor.
+    out_channels: int
+        number of channels in the output tensor.
+    downsample: bool, optional
+        make block with downsampling.
+        downsampling decrease H and W of tensor in 2 times
     activation: str, optional
         set activation function in ResNetBlock
         should be 'relu', 'sigmoid' or 'swish'
@@ -176,8 +160,9 @@ class ResNetBottleneckBlock(nn.Module):
     https://arxiv.org/pdf/1812.01187.pdf
     """
     def __init__(self,
-                 num_layer,
-                 downsample=0,
+                 in_channels,
+                 out_channels,
+                 downsample=False,
                  activation='relu',
                  block_type='A'
                  ):
@@ -185,17 +170,14 @@ class ResNetBottleneckBlock(nn.Module):
         
         if block_type not in ['A', 'B', 'C', 'D']:
             raise ValueError('block_type have unacceptable value')
-        if downsample not in [-1, 0, 1]:
-            raise ValueError('downsample have unacceptable value')
+        if not isinstance(downsample, bool):
+            raise TypeError('Downsample have unacceptable type')
+        
         self.use_downsample = downsample
-
-        if num_layer == 2 and downsample == -1:
-            self.in_channels = 16 * (2**num_layer)
-        elif num_layer > 2 and downsample != 0:
-            self.in_channels = 16 * (2**(num_layer - 1)) * 4
-        elif downsample == 0: 
-            self.in_channels = 16 * (2**num_layer) * 4
-        self.out_channels = 16 * (2**num_layer)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.use_downsample = downsample
+        self.block_type = block_type  
         
         if activation == 'relu':
             self.activation = nn.ReLU()
@@ -203,46 +185,42 @@ class ResNetBottleneckBlock(nn.Module):
             self.activation = nn.Sigmoid()
         elif activation == 'swish':
             self.activation = nn.SiLU()
-
-        if downsample == 1:
+        else:
+            raise ValueError('activation have unacceptable value')
+            
+        self.inner_channels = max(self.in_channels, self.out_channels) // 4
+        if self.use_downsample:
             if block_type == 'D': # skip connection
-                self.downsample = nn.Sequential(
+                self.downsample_block = nn.Sequential(
                     nn.AvgPool2d(kernel_size=2, stride=2),
-                    conv1x1(self.in_channels, self.out_channels * 4, stride=1),
-                    nn.BatchNorm2d(self.out_channels * 4))
+                    conv1x1(self.in_channels, self.out_channels, stride=1),
+                    nn.BatchNorm2d(self.out_channels))
             else:     
-                self.downsample = nn.Sequential(
-                    conv1x1(self.in_channels, self.out_channels * 4, stride=2),
-                    nn.BatchNorm2d(self.out_channels * 4))
+                self.downsample_block = nn.Sequential(
+                    conv1x1(self.in_channels, self.out_channels, stride=2),
+                    nn.BatchNorm2d(self.out_channels))
             
             if block_type in ['B', 'D']: # first part of block
-                self.conv1 = conv1x1(self.in_channels, self.out_channels, stride=1)
-                self.in_channels = self.out_channels
-                self.bn1 = nn.BatchNorm2d(self.out_channels)
-                self.conv2 = conv3x3(self.in_channels, self.out_channels, stride=2)
+                self.conv1 = conv1x1(self.in_channels, self.inner_channels, stride=1)
+                self.bn1 = nn.BatchNorm2d(self.inner_channels)
+                self.conv2 = conv3x3(self.inner_channels, self.inner_channels, stride=2)
             else:
-                self.conv1 = conv1x1(self.in_channels, self.out_channels, stride=2)
-                self.bn1 = nn.BatchNorm2d(self.out_channels)
-                self.conv2 = conv3x3(self.out_channels, self.out_channels)
+                self.conv1 = conv1x1(self.in_channels, self.inner_channels, stride=2)
+                self.bn1 = nn.BatchNorm2d(self.inner_channels)
+                self.conv2 = conv3x3(self.inner_channels, self.inner_channels)
+                        
+        elif not self.use_downsample:
+            if self.in_channels != self.out_channels:
+                self.downsample_block = nn.Sequential(
+                    conv1x1(self.in_channels, self.out_channels, stride=1),
+                    nn.BatchNorm2d(self.out_channels))
+            self.conv1 = conv1x1(self.in_channels, self.inner_channels)
+            self.bn1 = nn.BatchNorm2d(self.inner_channels)
+            self.conv2 = conv3x3(self.inner_channels, self.inner_channels)
+        self.bn2 = nn.BatchNorm2d(self.inner_channels)
                 
-        elif downsample == -1:
-            self.downsample = nn.Sequential(
-                conv1x1(self.in_channels, self.out_channels * 4, stride=1),
-                nn.BatchNorm2d(self.out_channels * 4))
-            self.conv1 = conv1x1(self.in_channels, self.out_channels)
-            self.in_channels = self.out_channels
-            self.bn1 = nn.BatchNorm2d(self.out_channels)
-            self.conv2 = conv3x3(self.in_channels, self.out_channels)
-            
-        elif downsample == 0:
-            self.conv1 = conv1x1(self.in_channels, self.out_channels)
-            self.in_channels = self.out_channels
-            self.bn1 = nn.BatchNorm2d(self.out_channels)
-            self.conv2 = conv3x3(self.in_channels, self.out_channels)
-        self.bn2 = nn.BatchNorm2d(self.out_channels)
-                
-        self.conv3 = conv1x1(self.out_channels, self.out_channels * 4)
-        self.bn3 = nn.BatchNorm2d(self.out_channels * 4)
+        self.conv3 = conv1x1(self.inner_channels, self.out_channels)
+        self.bn3 = nn.BatchNorm2d(self.out_channels)
         
     def forward(self, x):
         skip = x        
@@ -255,8 +233,8 @@ class ResNetBottleneckBlock(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        if self.use_downsample != 0:
-            skip = self.downsample(x)
+        if self.use_downsample or (self.in_channels != self.out_channels):
+            skip = self.downsample_block(x)
 
         out += skip
         out = self.activation(out)
