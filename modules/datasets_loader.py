@@ -8,16 +8,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def imagenette_loader(path, need_install=False):
+def imagenette_loader(path):
     try:
         from fastai.vision.all import untar_data, URLs
     except ImportError:
         print('FastAI do not found')
-        print('Start installing FastAI...')
-        os.system('conda install -c fastai -c pytorch fastai')
-        from fastai.vision.all import untar_data, URLs
-    dataset_path = untar_data(URLs.IMAGENETTE_320, dest=path)
-    return dataset_path
+        print('Please install Fast AI')
+        print('Command for installation: "conda install -c fastai -c pytorch fastai"')
+    untar_data(URLs.IMAGENETTE_320, dest=path)
 
 def visual_tensor(img):
     ''' Show the tensor as image. '''
@@ -29,9 +27,8 @@ def create_dir(dir_path):
     try:
         os.mkdir(dir_path)
     except OSError:
-        print('already created')
-    else:
-        print(dir_path + 'created')
+        return None
+    return None
 
 def label_func(label):
     ''' Return the name of class by it's label. '''
