@@ -5,7 +5,7 @@
 import torch
 from torch import nn
 
-from modules import CNN_blocks_rev
+from .CNN_blocks import ResNetNormalBlock, ResNetBottleneckBlock
 
 class ResNetLike(nn.Module):
     """ Compile ResNet-like neural networks.   
@@ -104,9 +104,9 @@ class ResNetLike(nn.Module):
                     in_channels = 64 * (2**num) * b
                     out_channels = 64 * (2**num) * b
                     downsample = False
-                cnn_block_type = CNN_blocks_rev.ResNetBottleneckBlock if bottleneck else CNN_blocks_rev.ResNetNormalBlock
+                cnn_block_module = ResNetBottleneckBlock if bottleneck else ResNetNormalBlock
                 self.body.add_module(name='block_%d_%d'%(num+2, block+1), # naming for corresponding with ResNet paper
-                                     module=cnn_block_type(
+                                     module=cnn_block_module(
                                          in_channels,
                                          out_channels,
                                          downsample=downsample,
