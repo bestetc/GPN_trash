@@ -207,9 +207,9 @@ class ResNetBottleneckBlock(nn.Module):
             else:
                 self.conv1 = conv1x1(self.in_channels, self.inner_channels, stride=2)
                 self.bn1 = nn.BatchNorm2d(self.inner_channels)
-                self.conv2 = conv3x3(self.inner_channels, self.inner_channels)
+                self.conv2 = conv3x3(self.inner_channels, self.inner_channels, stride=1)
                         
-        elif not self.use_downsample:
+        else:
             if self.in_channels != self.out_channels:
                 self.downsample_block = nn.Sequential(
                     conv1x1(self.in_channels, self.out_channels, stride=1),
