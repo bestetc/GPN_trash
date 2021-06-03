@@ -37,8 +37,7 @@ class SmoothCrossEntropyLoss(_WeightedLoss):
     [1]_Bag of Tricks for Image Classification with Convolutional Neural Networks.
     Part 5.2
         
-    """
-   
+    """   
     def __init__(self, weight=None, reduction='mean', smoothing=0.0):
         super().__init__(weight=weight, reduction=reduction)
         self.smoothing = smoothing
@@ -73,7 +72,7 @@ class SmoothCrossEntropyLoss(_WeightedLoss):
         return self.reduce_loss(-(targets * log_preds).sum(dim=-1))
     
 
-def get_optimizer(model, optimizer_type, learning_rate):
+def get_optimizer(model, optimizer_type, learning_rate, **kwargs):
     """ Return optimizer 
     
     Realize three type of optimizer.
@@ -89,6 +88,8 @@ def get_optimizer(model, optimizer_type, learning_rate):
         'AdamW': AdamW algorithm
     learning_rate: float
         Initial learning rate.
+    kwargs: dict, optional
+        optimizer specific parameters
     
     Returns
     -------
@@ -96,11 +97,11 @@ def get_optimizer(model, optimizer_type, learning_rate):
     
     """
     if optimizer_type == 'SGD':
-        optimizer = SGD(model.parameters(), lr=learning_rate, weight_decay=0.0001, momentum=0.9)
+        optimizer = SGD(model.parameters(), lr=learning_rate, **kwargs)
     elif optimizer_type == 'Adam':
-        optimizer = Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-06, weight_decay=0.0001, amsgrad=False)
+        optimizer = Adam(model.parameters(), lr=learning_rate, **kwargs)
     elif optimizer_type == 'AdamW':
-        optimizer = AdamW(model.parameters(), lr=learning_rate, betas=(0.9, 0.999), eps=1e-06, weight_decay=0.0001, amsgrad=False)
+        optimizer = AdamW(model.parameters(), lr=learning_rate, **kwargs)
     else:
         raise ValueError('Unknown optimizer_type value')
     
@@ -145,9 +146,8 @@ def get_scheduler(optimizer, scheduler_type, **kwargs):
     torch.optim.lr_scheduler.CyclicLR
     
     """
-
     if scheduler_type == 'step':
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=kwargs['step_len'], gamma=0.1)
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=kwargs['step_size'], gamma=0.1)
     elif scheduler_type == 'cos':
         scheduler = lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=kwargs['cycle_len'], eta_min=0)
     elif scheduler_type == 'warmup':
@@ -204,7 +204,7 @@ def true_accuracy(dataloader, model, device):
             correct += (predicted == labels).sum().item()
         return correct / total
     
-def approx_accuracy(dataset, model, device, denominator):
+def approx_accuracy(dataloader, model, device, fraction):
     """ Calculate accuracy metric on the part of dataset.
     
     Function create Subset of dataset and use true_accuracy() for accuracy calc.
@@ -212,15 +212,14 @@ def approx_accuracy(dataset, model, device, denominator):
     
     Parameters
     ----------
-    dataset: torch.utils.data.Dataset
-        dataset with data.
+    dataloader: torch.utils.data.DataLoader
+        DataLoader which contain dataset.
     model: torch.nn.Module
         Neural network model.
     device: str
         Device where model are located.
-    denominator: int
-        Reducing factor for dataset which would be use for accuracy calc.
-        'denominator = 4' mean that would be used 1/4 of dataset.
+    fraction: float
+        Fraction of dataset which used in accuracy calculation.
         
     Returns
     -------
@@ -237,14 +236,16 @@ def approx_accuracy(dataset, model, device, denominator):
     >>> model = torch.load('model_path')
     >>> model.eval()
     >>> device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    >>> accuracy = train_tools.approx_accuracy(dataloader, model, device, denominator=16)
+    >>> accuracy = train_tools.approx_accuracy(dataloader, model, device, fraction=0.1)
     
     """
-    
-    data_subset = Subset(dataset, randint(0,high=len(dataset), size=len(dataset)//denominator))
-    data_subset_loader = DataLoader(data_subset, shuffle=False)
-    accuracy = true_accuracy(data_subset_loader, model, device)
-    
+    if 0 < fraction <= 1:
+        dataset = dataloader.dataset
+        data_subset = Subset(dataset, randint(0, high=len(dataset), size=int(len(dataset) * fraction)))
+        data_subset_loader = DataLoader(data_subset, shuffle=False)
+        accuracy = true_accuracy(data_subset_loader, model, device)
+    else:
+        raise ValueError('fraction have wrong value')
     return accuracy
     
 def make_step(data, optimizer, model, criterion, device):
@@ -275,7 +276,6 @@ def make_step(data, optimizer, model, criterion, device):
     >>> loss, outputs = train_tools.make_step(data, optimizer, model, criterion, device)
     
     """
-    
     inputs, labels = data[0].to(device), data[1].to(device)
     optimizer.zero_grad()
     outputs = model(inputs)
