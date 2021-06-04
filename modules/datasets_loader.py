@@ -17,11 +17,11 @@ def imagenette_loader(path):
         print('Command for installation: "conda install -c fastai -c pytorch fastai"')
     untar_data(URLs.IMAGENETTE_320, dest=path)
 
-def visual_tensor(img):
+def visualize_tensor(img):
     ''' Show the tensor as image. '''
     plt.imshow(np.transpose(img.numpy(), (1, 2, 0)))
     plt.show()
-    
+
 def create_dir(dir_path):
     ''' Create the directory '''
     try:
