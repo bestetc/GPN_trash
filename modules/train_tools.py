@@ -8,13 +8,16 @@
 
 """
 
+import math
 import torch
 from torch.nn.modules.loss import _WeightedLoss
-from torch.optim import SGD, Adam, AdamW
+from torch.optim import Optimizer, SGD, Adam, AdamW
 from torch.optim import lr_scheduler
 from torch import no_grad
 from torch.utils.data import Subset, DataLoader
 from numpy.random import randint
+
+from .custom_optimizers import RAdam, RangerRAdam
 
 class SmoothCrossEntropyLoss(_WeightedLoss):
     """ Calculate CrossEntropyLoss with smoothing labels.
@@ -72,6 +75,7 @@ class SmoothCrossEntropyLoss(_WeightedLoss):
         return self.reduce_loss(-(targets * log_preds).sum(dim=-1))
     
 
+
 def get_optimizer(model, optimizer_type, learning_rate, **kwargs):
     """ Return optimizer 
     
@@ -102,6 +106,10 @@ def get_optimizer(model, optimizer_type, learning_rate, **kwargs):
         optimizer = Adam(model.parameters(), lr=learning_rate, **kwargs)
     elif optimizer_type == 'AdamW':
         optimizer = AdamW(model.parameters(), lr=learning_rate, **kwargs)
+    elif optimizer_type == 'RAdam':
+        optimizer = RAdam(model.parameters(), lr=learning_rate, **kwargs)
+    elif optimizer_type == 'Ranger':
+        optimizer = RangerRAdam(model.parameters(), lr=learning_rate, **kwargs)
     else:
         raise ValueError('Unknown optimizer_type value')
     
