@@ -75,7 +75,6 @@ class SmoothCrossEntropyLoss(_WeightedLoss):
         return self.reduce_loss(-(targets * log_preds).sum(dim=-1))
     
 
-
 def get_optimizer(model, optimizer_type, learning_rate, **kwargs):
     """ Return optimizer 
     
