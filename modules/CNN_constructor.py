@@ -28,6 +28,8 @@ class ResNetLike(nn.Module):
     activation: str, optional
         Set activation function used in ResNet block.
         Could be 'relu', 'sigmoid' or 'swish'.
+    self_attention: bool, optional
+        add self attention layer at the end of the first blocks group.
     
     Raises
     ------
@@ -58,7 +60,9 @@ class ResNetLike(nn.Module):
                  num_classes,
                  bottleneck,
                  resnet_type='A',
-                 activation='relu'
+                 activation='relu',
+                 self_attention=False,
+                 blur_pool=False
                  ):
         
         self.layers = layers
@@ -66,6 +70,9 @@ class ResNetLike(nn.Module):
         self.bottleneck = bottleneck
         self.resnet_type = resnet_type
         self.activation = activation
+        self.self_attention = self_attention
+        self.blur_pool = blur_pool
+
         
         super().__init__()
         
@@ -92,6 +99,9 @@ class ResNetLike(nn.Module):
         b = 4 if bottleneck else 1 # channels multiplier
         for num, layer in enumerate(layers):
             for block in range(layer):
+                use_attention = False
+                if num == 0 and block == layers[0] and self_attention:
+                    use_attention = True
                 if block == 0 and num == 0:
                     in_channels = 64
                     out_channels = 64 * b
@@ -111,7 +121,9 @@ class ResNetLike(nn.Module):
                                          out_channels,
                                          downsample=downsample,
                                          activation=activation,
-                                         block_type=resnet_type))
+                                         block_type=resnet_type,
+                                         use_attention=use_attention
+                                     ))
         
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.linear_input = 32*(2**(len(layers))) * b
