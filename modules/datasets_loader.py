@@ -9,6 +9,7 @@ import numpy as np
 
 
 def imagenette_loader(path):
+    ''' Load Imagenette-320 version 2 dataset to path '''
     try:
         from fastai.vision.all import untar_data, URLs
     except ImportError:
