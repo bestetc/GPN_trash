@@ -1,4 +1,4 @@
-''' Module contain some customs optimizer'''
+''' Module contain some custom optimizers'''
 
 import math
 import torch
@@ -185,7 +185,7 @@ class RangerRAdam(Optimizer):
         # prep defaults and init torch.optim base
         defaults = dict(lr=lr, alpha=alpha, k=k, step_counter=0, betas=betas,
                         N_sma_threshhold=N_sma_threshhold, eps=eps, weight_decay=weight_decay)
-        super().__init__(params, defaults)
+        super(RangerRAdam, self).__init__(params, defaults)
 
         # adjustable threshold
         self.N_sma_threshhold = N_sma_threshhold
@@ -213,7 +213,7 @@ class RangerRAdam(Optimizer):
 
     def __setstate__(self, state):
         print("set state called")
-        super(Ranger, self).__setstate__(state)
+        super(RangerRAdam, self).__setstate__(state)
 
     def step(self, closure=None):
         loss = None
