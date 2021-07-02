@@ -86,9 +86,6 @@ def get_optimizer(model, optimizer_type, learning_rate, **kwargs):
         Neural network model.
     optimizer_type: str
         Define optimizer type.
-        'SGD': SGD algorithm
-        'Adam': Adam algorithm
-        'AdamW': AdamW algorithm
     learning_rate: float
         Initial learning rate.
     kwargs: dict, optional
@@ -96,8 +93,8 @@ def get_optimizer(model, optimizer_type, learning_rate, **kwargs):
     
     Returns
     -------
-    torch.optim
-    
+    optimizer: torch.optim
+            
     """
     if optimizer_type == 'SGD':
         optimizer = SGD(model.parameters(), lr=learning_rate, **kwargs)
@@ -144,7 +141,7 @@ def get_scheduler(optimizer, scheduler_type, **kwargs):
         
     Returns
     -------
-    torch.optim.lr_scheduler
+    scheduler: torch.optim.lr_scheduler
     
     See Also
     --------
